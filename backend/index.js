@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors'); // Import the cors middleware
 const app = express();
 const port = 3000; // Port for the API server
 
@@ -17,6 +18,7 @@ const states = [
 ];
 
 app.use(bodyParser.json());
+app.use(cors()); // Enable CORS for all routes
 
 app.post('/checkStates', (req, res) => {
     const { states: inputStates } = req.body;
