@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chandler's State Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        textarea {
+            padding: 10px;
+            width: 80%;
+            max-width: 300px;
+            height: 100px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .timer {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chandler's State Game</h1>
+        <p>Type in U.S. state names, one per line:</p>
+        <form id="stateForm">
+            <textarea name="states" id="stateInput" placeholder="Enter states, one per line"></textarea>
+            <br>
+            <button type="button" onclick="submitGuesses()">Submit Guesses</button>
+        </form>
+        <div class="timer" id="timer">02:00</div>
+    </div>
+
+    <script>
+        let timer;
+        let timeRemaining = 120; // 2 minutes in seconds
+
+        function startTimer() {
+            timer = setInterval(() => {
+                if (timeRemaining <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('timer').textContent = "Time's up!";
+                    return;
+                }
+                timeRemaining--;
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        async function submitGuesses() {
+            const form = document.getElementById('stateForm');
+            const formData = new FormData(form);
+            const states = formData.get('states');
+
+            try {
+                const response = await fetch('http://localhost:3000/checkStates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ states }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                // Redirect to results page with results in query parameters
+                const queryParams = new URLSearchParams(result).toString();
+                window.location.href = `results.html?${queryParams}`;
+            } catch (error) {
+                console.error('Error submitting guesses:', error);
+                alert('There was an error submitting your guesses.');
+            }
+        }
+
+        // Start the timer when the page loads
+        window.onload = startTimer;
+    </script>
+</body>
+</html>
