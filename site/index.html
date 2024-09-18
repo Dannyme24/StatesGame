@@ -76,13 +76,16 @@
             const formData = new FormData(form);
             const states = formData.get('states');
 
+            const area = document.getElementById("stateInput");             
+            const statesArray = area.value.replace(/\r\n/g,"\n").split("\n").filter(line => line);
+
             try {
                 const response = await fetch('http://localhost:3000/checkStates', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ states }),
+                    body: JSON.stringify({ states : statesArray }),
                 });
 
                 if (!response.ok) {
