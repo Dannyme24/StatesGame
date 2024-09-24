@@ -119,6 +119,8 @@ resource "aws_api_gateway_integration_response" "backend-api-integration-respons
     response_templates = {
       "application/json" = null
     }
+
+    depends_on = [ aws_api_gateway_integration.backend-api-lambdaintegration ]
 }
 
 resource "aws_api_gateway_deployment" "backend-api-deployment" {
@@ -127,6 +129,9 @@ resource "aws_api_gateway_deployment" "backend-api-deployment" {
     lifecycle {
       create_before_destroy = true
     }
+
+    depends_on = [ aws_api_gateway_integration_response.backend-api-integration-response,
+                   aws_api_gateway_method_response.method-response-200 ]
     
 }
 
