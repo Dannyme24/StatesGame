@@ -143,4 +143,64 @@ resource "aws_api_gateway_stage" "backend-api-stage" {
 }
 
 #####Site#####
+resource "aws_amplify_app" "example" {
+  name       = "statesGameFrontend"
+
+  custom_rule {
+    source = "/<*>"
+    status = "404"
+    target = "/index.html"
+  }
+}
+
+resource "aws_amplify_branch" "master" {
+  app_id      = aws_amplify_app.example.id
+  branch_name = "staging"
+
+  stage     = "PRODUCTION"
+
+  environment_variables = {
+    REACT_APP_API_SERVER = "https://api.example.com"
+  }
+}
+
+resource "aws_s3_bucket" "statesGameBucket" {
+  bucket = "statesgamebucket"
+}
+
+data "archive_file" "frontend-payload" {
+  type        = "zip"
+  output_path = "amplify_payload.zip"
+  source_dir  = "site/"
+}
+
+resource "aws_s3_object" "upload-frontend-payload" {
+  bucket = aws_s3_bucket.statesGameBucket.id
+  key = "sitefiles.zip"
+  source = "amplify_payload.zip"
+
+  depends_on = [ data.archive_file.backend-payload, aws_s3_bucket.statesGameBucket ]
+}
+
+resource "aws_s3_bucket_ownership_controls" "enable-acl" {
+  bucket = aws_s3_bucket.statesGameBucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "null_resource" "run-deploy" {
+  provisioner "local-exec" {
+    command = "aws amplify start-deployment --app-id $APP_ID --branch-name $BRANCH_NAME --source-url $SOUCE_URL"
+
+    environment = {
+      APP_ID = aws_amplify_app.example.id,
+      BRANCH_NAME = aws_amplify_branch.master.branch_name
+      SOUCE_URL = "s3://statesgamebucket/sitefiles.zip"
+
+    }
+  }
+
+  depends_on = [ aws_s3_object.upload-frontend-payload, aws_amplify_branch.master ]
+}
 
