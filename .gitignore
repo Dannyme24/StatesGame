@@ -2,3 +2,4 @@ backend/node_modules
 site/indexNonApi.html
 site/resultsnonAPI.html
 *terraform*
+*.zip
